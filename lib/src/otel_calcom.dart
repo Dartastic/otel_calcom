@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_calcom_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_calcom';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class CalcomResult {
+  /// Creates a result.
   const CalcomResult({
     this.itemCount,
     this.slotsReturned,
@@ -54,8 +55,13 @@ class CalcomResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class CalcomCallResult<T> {
+  /// Creates a call result.
   const CalcomCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final CalcomResult? result;
 }
@@ -85,38 +91,38 @@ Future<T> tracedCalcom<T>({
   final span = _tracer().startSpan(
     'calcom $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.itemCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'calcom.item_count',
           r.result!.itemCount!,
         ));
       }
       if (r.result!.slotsReturned != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'calcom.slots_returned',
           r.result!.slotsReturned!,
         ));
       }
       if (r.result!.eventTypeId != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'calcom.event_type.id',
           r.result!.eventTypeId!,
         ));
       }
       if (r.result!.bookingId != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'calcom.booking.id',
           r.result!.bookingId!,
         ));
       }
       if (r.result!.bookingStatus != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'calcom.booking.status',
           r.result!.bookingStatus!,
         ));
@@ -128,31 +134,31 @@ Future<T> tracedCalcom<T>({
         }
       }
       if (r.result!.schedulingType != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'calcom.scheduling.type',
           r.result!.schedulingType!,
         ));
       }
       if (r.result!.deployment != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'calcom.deployment',
           r.result!.deployment!,
         ));
       }
       if (r.result!.rescheduledFrom != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'calcom.booking.rescheduled_from',
           r.result!.rescheduledFrom!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'calcom.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -163,13 +169,13 @@ Future<T> tracedCalcom<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
